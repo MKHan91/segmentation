@@ -2,8 +2,6 @@ import torch
 import random
 import numpy as np
 import os.path as osp
-import cv2
-
 
 from torchvision.transforms import functional as F
 from torch.utils.data import Dataset
@@ -13,15 +11,14 @@ from PIL import Image
 
 
 class COCOSegDataset(Dataset):
-    def __init__(self, root_dir, input_height, input_width, transform=None):
+    def __init__(self, root_dir, input_height, input_width):
         
         json_path = osp.join(root_dir, "jsonfile", "gt.json")
         image_dir = osp.join(root_dir, "image")
     
-        self.coco = COCO(json_path)
+        self.coco      = COCO(json_path)
         self.image_dir = image_dir
-        self.transform = transform
-        self.ids = list(self.coco.imgs.keys())
+        self.ids       = list(self.coco.imgs.keys())
 
         self.input_height = input_height
         self.input_width  = input_width
@@ -39,7 +36,7 @@ class COCOSegDataset(Dataset):
         
         path = img_info['file_name']
         image = Image.open(f'{self.image_dir}/{path}').convert('RGB')
-    
+
         masks = []
         for ann in anns:
             mask = self.coco.annToMask(ann)
@@ -53,7 +50,7 @@ class COCOSegDataset(Dataset):
         aug_image         = np.array(aug_image, dtype= np.float32) / 255.
         aug_gt            = np.array(aug_gt,    dtype= np.float32)
         aug_image, aug_gt = self.flip(image=aug_image, gt=aug_gt)
-        
+            
         sample = {'image': aug_image, 'gt': aug_gt}
         
         preprocessing_transforms = transforms.Compose([ToTensor()])
@@ -63,6 +60,7 @@ class COCOSegDataset(Dataset):
 
 
     def resize(self, image, gt, size):
+        
         resized_image = image.resize(size, Image.BICUBIC)
         
         gt  = Image.fromarray(gt)
